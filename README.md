@@ -1,3 +1,1 @@
 # ShannonMineQuestProject
-
-Graphics
