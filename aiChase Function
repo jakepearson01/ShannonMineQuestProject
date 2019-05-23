@@ -1,0 +1,13 @@
+function aiChase(enemy, distance, speed){
+    var playerToAI = enemy.getX() - player.getX();
+    if(playerToAI < 0){
+        playerToAI *= -1;
+    }
+    if(playerToAI < distance){
+        if(enemy.getX() < player.getX()){
+            enemy.setPosition(enemy.getX() + speed, enemy.getY());
+        }else{
+            enemy.setPosition(enemy.getX() - speed, enemy.getY());
+        }
+    }
+}
