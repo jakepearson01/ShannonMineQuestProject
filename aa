@@ -1,0 +1,301 @@
+setSize(1280,720);
+
+
+// Global vars
+var character;
+var CollisionObjects = []; // Array that contains all objects you can collide with.
+var GravityEffectors = []; // Put things in here that you want to apply gravity to.
+var CreatureHolder = []; // hold creature data
+var CreatureHitbox = []; // hold creature hitboxes
+
+function Creature(position){ // this function works basically like a class
+    this.CreatureData = new Object();
+    
+    this.CreatureData["AttackSpeed"] = 10;
+    this.CreatureData["AttackRange"] = 10;
+    this.CreatureData["Damage"] = 10;
+    this.CreatureData["MoveStep"] = 4;
+    this.CreatureData["Health"] = 100;
+    
+    var aaaaa;
+    aaaaa = new Rectangle(100, 100);
+    add(aaaaa);
+    CreatureHitbox.push(aaaaa);
+    giveGravity(aaaaa);
+    
+    this.PrintCreature = function(type){
+        println("Creature");
+        // spawn creature of type
+    }   
+    this.Attack = function(){
+        
+    }
+    this.Spawn = function(x, y){
+        
+    }
+    
+}
+
+var newcreature = new Creature(); //make a new creature
+newcreature.PrintCreature();
+CreatureHolder.push(newcreature);
+
+
+function Wait(time){ 
+   // setTimer();     
+}
+
+
+
+
+
+// Character vars:
+var movingRight = false;
+var movingLeft = false;
+var jumping = false;
+
+function giveGravity(object){ // check if colliding with character so it doesnt change pos
+    var increment = 0;
+    
+    function Gravity(){
+        //println(newcreature.base.getY());
+        if(!getCollider(object)){
+            if(object == character){
+                if(!jumping){
+                    increment = increment + 1; // constantly add to the increment to simulate weight - falling faster and faster as time falling increases
+                    object.setPosition(object.getX(), object.getY() + increment);
+                }
+            }else{
+                
+                increment = increment + 1; // constantly add to the increment to simulate weight - falling faster and faster as time falling increases
+                object.setPosition(object.getX(), object.getY() + increment);
+            }
+        }else{
+            //if(!CreatureHolder[object]){
+                increment = 0;
+                object.setPosition(object.getX(), getCollider(object).getY() - object.getHeight());
+            //}else{
+               // increment = 0;
+               // object.setPosition(object.getX(), getCollider(object).getY() - object.getHeight()); 
+           // }
+        }
+    }
+
+    setTimer(Gravity, 1);
+
+}
+
+
+function LoadCharacter(x, y){ // Loads the character at the X and Y pos
+    character = new Rectangle(50, 50);
+    character.setPosition(x, y);
+    character.setColor(Color.blue);
+    add(character);
+}
+LoadCharacter(10, 10);
+
+
+var touchingGround = false;
+var jumpIncrement = 20;
+
+    function MoveRight(){
+       //if(!movingLeft){
+            
+                
+            
+            character.setPosition(character.getX() + 4, character.getY());
+       
+       //}
+    }
+    
+    
+        function MoveLeft(){
+      // if(!movingRight){
+            character.setPosition(character.getX() - 4, character.getY());
+       // }
+    }
+    
+    
+function CharacterHandler(){ // classy thing kind of pointless - may be useful later so i made it
+    
+    this.Swing = function(){
+        println("swing");
+        for(var i = 0; i < CreatureHolder.length; i++){
+            println("loop");
+            println(CreatureHitbox[i].getX());
+            println(CreatureHolder[i].CreatureData["Health"]);println(CreatureHolder[i].CreatureData["Health"]);println(CreatureHolder[i].CreatureData["Health"]);
+            if(Math.abs(character.getX() - CreatureHitbox[i].getX()) > 100){
+                println("workedddddddd");
+                CreatureHolder[i].CreatureData["Health"] = CreatureHolder[i].CreatureData["Health"] - characterDamage
+                println(CreatureHolder[i].CreatureData["Health"]);
+            }
+        }
+    }
+    
+    this.Jump = function(){
+        
+        println("Jump");
+        
+        jumping = true;
+        if(jumpIncrement > 0){
+            jumpIncrement = jumpIncrement - 1;
+            character.setPosition(character.getX(), character.getY() - jumpIncrement);
+        }else{
+            stopTimer(charHandler.Jump);
+            jumping = false;
+            jumpIncrement = 20;
+        }
+        
+    }
+    
+    function Die(creature2){
+        for(var i = 0; i < CreatureHolder.length(); i++){
+            if(CreatureHolder[i] == creature2){
+                CreatureHolder.remove(i);
+                CreatureHitbox.remove(i);
+            }
+        }    
+    }
+    
+    function checkGround(){
+        if(getCollider(character)){
+            touchingGround = true;
+        }else{
+            touchingGround = false;
+        }
+    }
+    setTimer(checkGround, 1);
+    print("ran");
+    
+}
+
+var characterDamage = 10;
+
+var charHandler = new CharacterHandler();
+
+function getCollider(something){ // If something collides with something, return which corner collided
+    var topLeft = getElementAt(something.getX() - 1, something.getY() - 1)
+    if(topLeft != null){
+        return topLeft;
+    }
+    
+    var topRight = getElementAt(something.getX() + something.getWidth() + 1, something.getY() - 1)
+    if(topRight != null){
+        return topRight;
+    }
+    
+    var bottomLeft = getElementAt(something.getX() - 1, something.getY() + something.getHeight() - 1)
+    if(bottomLeft != null){
+        return bottomLeft;
+    }
+    
+    var bottomRight = getElementAt(something.getX() + something.getWidth() + 1, something.getY() + something.getHeight() + 1)
+    if(bottomRight != null){
+      //  var rect = new Rectangle(10,10);
+       // rect.setColor(Color.red);
+       // rect.setPosition(bottomRight.getX(), bottomRight.getY());
+       // add(rect);
+        return bottomRight;
+    }
+
+    return null;
+}
+
+giveGravity(character);
+
+
+function LoadMap(maptype){
+    if(maptype == "Map1"){
+        var background = new Rectangle(getWidth(), getHeight());
+        
+        var ground = new Rectangle(getWidth(), 50);
+        ground.setPosition(0, getHeight() - ground.getHeight());
+        ground.setColor(Color.black);
+        add(ground);
+        
+        CollisionObjects.push(ground);
+        
+        var ground2 = new Rectangle(200, 50);
+        ground2.setPosition(1100, 500);
+        ground2.setColor(Color.black);
+        add(ground2);
+        
+        CollisionObjects.push(ground2);
+        
+        var ground3 = new Rectangle(200, 50);
+        ground3.setPosition(850, 300);
+        ground3.setColor(Color.black);
+        add(ground3);
+        
+        CollisionObjects.push(ground3);
+    }
+}
+
+
+
+
+//giveGravity(AI);
+
+
+var a = false;
+function keyDown(e){
+    if(e.keyCode == Keyboard.letter('D') && !movingRight){
+        movingRight = true;
+        stopTimer(MoveLeft);
+        setTimer(MoveRight, 1);
+       
+    
+    }
+    
+    if(e.keyCode == Keyboard.letter('A') && !movingLeft){
+        movingLeft = true;
+        
+        stopTimer(MoveRight);
+        setTimer(MoveLeft, 1);
+
+        }
+        
+    if(e.keyCode == Keyboard.SPACE && !jumping){
+        print(charHandler.touchingGround);
+        if(touchingGround){
+            setTimer(charHandler.Jump, 1);
+        }
+    }
+}
+keyDownMethod(keyDown);
+
+
+function keyUp(e){
+    println("keyup");
+    if(e.keyCode == Keyboard.letter('D')){
+        movingRight = false;
+        a = true;
+        println(a);
+        print("stopright");
+        stopTimer(MoveRight); 
+       
+    }
+    
+    if(e.keyCode == Keyboard.letter('A')){
+        movingLeft = false;
+        a = true;
+        println(a);
+        print("stopleft");
+        stopTimer(MoveLeft); 
+    }
+    
+}
+keyUpMethod(keyUp);
+
+function mouseClick(e){
+    print("click");
+    charHandler.Swing();
+}
+mouseClickMethod(mouseClick);
+
+function mouseMove(e){
+    
+}
+mouseMoveMethod(mouseMove);
+
+LoadMap("Map1");
