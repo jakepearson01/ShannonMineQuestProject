@@ -9,10 +9,17 @@ var GravityEffectors = []; // Put things in here that you want to apply gravity 
 var CreatureHolder = []; // hold creature data
 var CreatureHitbox = []; // hold creature hitboxes
 
-
+function LoadCharacter(x, y){ // Loads the character at the X and Y pos
+    character = new Rectangle(50, 50);
+    character.setPosition(x, y);
+    character.setColor(Color.blue);
+    add(character);
+}
+LoadCharacter(10, 10);
 
     
-    
+
+
 function Creature(position, sizeX, sizeY){ // this function works basically like a class
     this.CreatureData = new Object();
     
@@ -50,10 +57,20 @@ function Creature(position, sizeX, sizeY){ // this function works basically like
             }
         }    
     }
+    println(this.CreatureData["Hitbox"].getX());
+    chasey(this.CreatureData["Hitbox"],400,2);
     
-    
+    function chasey(a,b,c){
+        
+        function callChase(){
+            aiChase(a,b,c);
+        }
+        setTimer(callChase, 1);
+    }
+
     
 }
+
 
 var newcreature = new Creature(0, 100, 100); //make a new creature
 newcreature.PrintCreature();
@@ -133,13 +150,9 @@ function giveGravity(object){ // check if colliding with character so it doesnt 
 }
 
 
-function LoadCharacter(x, y){ // Loads the character at the X and Y pos
-    character = new Rectangle(50, 50);
-    character.setPosition(x, y);
-    character.setColor(Color.blue);
-    add(character);
-}
-LoadCharacter(10, 10);
+
+
+
 
 
 var touchingGround = false;
@@ -341,6 +354,21 @@ function mouseMove(e){
     
 }
 mouseMoveMethod(mouseMove);
+
+//AI chase player when certain distance away
+function aiChase(enemy, distance, speed){
+    var playerToAI = enemy.getX() - character.getX();
+    if(playerToAI < 0){
+        playerToAI *= -1;
+    }
+    if(playerToAI < distance){
+        if(enemy.getX() < character.getX()){
+            enemy.setPosition(enemy.getX() + speed, enemy.getY());
+        }else{
+            enemy.setPosition(enemy.getX() - speed, enemy.getY());
+        }
+    }
+}
 
 LoadMap("Map1");
 setTimer(Attack, 1); // calls the attack timer so it constantly checks to see if player is near enemy, if so do damage
