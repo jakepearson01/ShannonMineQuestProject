@@ -9,28 +9,31 @@ var GravityEffectors = []; // Put things in here that you want to apply gravity 
 var CreatureHolder = []; // hold creature data
 var CreatureHitbox = []; // hold creature hitboxes
 
-function LoadCharacter(x, y){ // Loads the character at the X and Y pos
-    character = new Rectangle(50, 50);
+function LoadCharacter(x, y, image){ // Loads the character at the X and Y pos
+    character = new WebImage(image);
+    character.setSize(50, 50);
     character.setPosition(x, y);
     character.setColor(Color.blue);
     add(character);
 }
-LoadCharacter(10, 10);
+LoadCharacter(10, 10, "https://cdn1.medicalnewstoday.com/content/images/articles/322/322868/golden-retriever-puppy.jpg");
 
     
 
 
-function Creature(position, sizeX, sizeY){ // this function works basically like a class
+function Creature(positionX, positionY, sizeX, sizeY, attackspeed, attackrange, damage, movestep, health, detectrange, image){ // this function works basically like a class
     this.CreatureData = new Object();
     
     
-    this.CreatureData["AttackSpeed"] = 30; // how many mil seconds it takes to do damage again
-    this.CreatureData["AttackRange"] = 10;
-    this.CreatureData["Damage"] = 10;
-    this.CreatureData["MoveStep"] = 4;
-    this.CreatureData["Health"] = 100;
-    this.CreatureData["Hitbox"] = new Rectangle(sizeX, sizeY);
-    
+    this.CreatureData["AttackSpeed"] = attackspeed; // how many mil seconds it takes to do damage again
+    this.CreatureData["AttackRange"] = attackrange;
+    this.CreatureData["Damage"] = damage;
+    this.CreatureData["MoveStep"] = movestep;
+    this.CreatureData["Health"] = health;
+    this.CreatureData["DetectRange"] = detectrange;
+    this.CreatureData["Hitbox"] = new WebImage(image);
+    this.CreatureData["Hitbox"].setSize(sizeX, sizeY);
+    this.CreatureData["Hitbox"].setPosition(positionX, positionY);
     add(this.CreatureData["Hitbox"]);
     
     this.CreatureData["Hitbox"].setColor(Color.red);
@@ -58,9 +61,9 @@ function Creature(position, sizeX, sizeY){ // this function works basically like
         }    
     }
     println(this.CreatureData["Hitbox"].getX());
-    chasey(this.CreatureData["Hitbox"],400,2);
+    chasey(this.CreatureData["Hitbox"], this.CreatureData["DetectRange"], this.CreatureData["MoveStep"], this.CreatureData["AttackSpeed"]);
     
-    function chasey(a,b,c){
+    function chasey(a,b,c, attackspeed){
         
         function callChase(){
             aiChase(a,b,c);
@@ -72,27 +75,33 @@ function Creature(position, sizeX, sizeY){ // this function works basically like
 }
 
 
-var newcreature = new Creature(0, 100, 100); //make a new creature
+var newcreature = new Creature(0, 0, 100, 100, 80, 200, 10, 2, 100, 400, "https://www.petmd.com/sites/default/files/Acute-Dog-Diarrhea-47066074.jpg"); //make a new creature (standard creature stats, useful if confused and don't want to spend time configuring)
 newcreature.PrintCreature();
 CreatureHolder.push(newcreature);
 
 
 var attackcounter = 0;
-function Attack(){
+function Attack(){ // creatures attack
     //println(newcreature.CreatureData["Hitbox"].getX());
    // println("attack");
     for(var i = 0; i < CreatureHolder.length; i++){
-        if(Math.abs(character.getX() - CreatureHolder[i].CreatureData["Hitbox"].getX()) < 200){
-            if(Math.abs(character.getY() - CreatureHolder[i].CreatureData["Hitbox"].getY()) < 200){
+        if(Math.abs(character.getX() - CreatureHolder[i].CreatureData["Hitbox"].getX()) < CreatureHolder[i].CreatureData["AttackRange"]){
+            if(Math.abs(character.getY() - CreatureHolder[i].CreatureData["Hitbox"].getY()) < CreatureHolder[i].CreatureData["AttackRange"]){
                 attackcounter = attackcounter + 1;
                 //println("inside");
                 if(attackcounter == CreatureHolder[i].CreatureData["AttackSpeed"]){
                     
                     attackcounter = 0;
                     characterhp = characterhp - CreatureHolder[i].CreatureData["Damage"]
-                    println("CHAR DAMAGE TAKEN: (HP) = " + characterhp); // MATTHEW, DISPLAY HEALTH HERE
+                    // MATTHEW, DISPLAY HEALTH HERE
+                    if(characterhp <= 0){
+                        var endgame = new Rectangle(getWidth(), getHeight()); // death screen
+                        add(endgame);
+                        remove(character);
+                    }
+                    println("CHAR DAMAGE TAKEN: (HP) = " + characterhp); 
                 }
-                //subtract hp, add counter
+             
             }
         }
     }
@@ -369,6 +378,19 @@ function aiChase(enemy, distance, speed){
         }
     }
 }
+
+var level = 0;
+function changeScene(x, y){
+    var end = new Rectangle(50, 25);
+    end.setPosition(x, y);
+    end.setColor(Color.green);
+    
+    add(end)
+    CollisionObjects.push[end];
+    level = level + 1;
+    return getCollider(end);
+}
+changeScene(850, 275);
 
 LoadMap("Map1");
 setTimer(Attack, 1); // calls the attack timer so it constantly checks to see if player is near enemy, if so do damage
