@@ -1,0 +1,179 @@
+var shopButtonPressed = false;
+var scene = 0;
+var money = 100; //Most basic item 200 money
+var level = 0;
+var previousLevel = -1;
+var mouseX = 0;
+var mouseY = 0;
+var stage; //Already Defined
+
+//____________________________________________________
+
+
+
+
+
+//____________________________________________________
+
+function start()
+{
+	setTimer(display, 0);
+}
+
+function display()
+{
+    if(level != previousLevel)
+        playAudio(level);
+        
+    previousLevel = level;
+    
+    if(stage % 4 == 0)
+        level++;
+        
+	keyDownMethod(keyDown);
+	mouseMoveMethod(onMouseMove);
+    
+	if(shopButtonPressed)
+		for(var i = 4; i < 13; i++)
+			displayItems(0, i);
+    else
+	{
+		clearScreen();
+	    /*for(CreatureHolder[].length())
+		    displayGraphics(character.getX(), character.getY(), i);*/
+	}
+	
+	function displayItems(selectedItem, i)
+	{
+		selectedItem += 3;
+		if(selectedItem == i)
+			drawImage(getGraphics(i), ((i - 1) % 3) * 100, (Math.floor((i - 1) / 3) * 100) - 100, 64, 64);
+		else
+			drawImage(getGraphics(i + 1), ((i - 1) % 3) * 100, (Math.floor((i - 1) / 3) * 100) - 100, 64, 64);
+		if()
+	}
+
+    function displayGraphics(xCoordinate, yCoordinate) 
+	{
+		drawImage(getGraphics(14 + level), 0, getHeight() - 50, getWidth(), 50);
+		if(i == 0)
+			drawImage(get, xCoordinate, yCoordinate, 64, 64);
+		else
+			drawImage(drawImage(20 + level), xCoordinate, yCoordinate, 64, 64);
+	}
+
+	function drawImage(image, x, y, width, height)
+	{
+		image.setPosition(x, y);
+		image.setSize(width, height);
+		add(image);
+	}
+
+	function clearScreen()
+	{
+		drawImage(getGraphics(1), 0, 0, getWidth, getHeight);
+	}
+}
+
+function getGraphics(imageNumber) 
+{ 
+	if(imageNumber == 0)
+		return new WebImage("https://i.ibb.co/ygcWrgK/Welcome-to-Mine-Quest.png");
+	else if(imageNumber == 1)
+		return new WebImage("https://www.drodd.com/images14/white13.png");
+	else if(imageNumber == 2)
+		return new WebImage("https://i.ibb.co/W29x6gy/Logo.png");
+	else if(imageNumber == 3)
+		return new WebImage("https://i.ibb.co/WB65fLr/MainChar.png");
+	else if(imageNumber == 4)
+	    return new WebImage("https://i.ibb.co/njhXRrR/Shannon-Check.png");
+	else if(imageNumber == 5)
+	    return new WebImage("https://i.ibb.co/wK84064/New-Piskel.png");
+	else if(imageNumber == 6)
+	    return new WebImage("https://i.ibb.co/jhw98mv/Knight-Sword-1.png");
+	else if(imageNumber == 7)
+	    return new WebImage("https://i.ibb.co/tsTtGVK/Samurai-Sword-2.png");
+	else if(imageNumber > 7 && imageNumber < 14)
+	    return new WebImage("https://i.ibb.co/GFZszNL/Sold-Out.png");
+	else if(imageNumber == 14)
+		return new WebImage("OFF");
+	else if(imageNumber == 15)
+		return new WebImage("https://i.ibb.co/vQrXjMP/Office-Carpet.png");
+	else if(imageNumber == 16)
+		return new WebImage("PR");
+	else if(imageNumber == 17)
+		return new WebImage("PRC");
+	else if(imageNumber == 18)
+		return new WebImage("https://i.ibb.co/JQJhy1j/Court.png");
+	else if(imageNumber == 19)
+		return new WebImage("https://i.ibb.co/xmjJmyb/Court-Carpet.png");
+	else if(imageNumber == 20)
+	    return new WebImage("//https://i.ibb.co/9ps04g4/pixil-frame-0.png");
+	else if(imageNumber == 21)
+		return new WebImage("https://i.ibb.co/VwSgkMr/Anger-Slime.png");
+	else if(imageNumber == 22)
+	    return new WebImage("https://i.ibb.co/vJYdrfC/New-Piskel-1-1.png");
+	else if(imageNumber == 23)
+	    return new WebImage("BAZZELL!!!!!!!!!!!!!!!!");
+	else if(imageNumber == 24)
+	    return new WebImage("https://i.ibb.co/drN23tn/Heart.png");
+	else if(imageNumber == 25)
+	    return new WebImage("https://i.ibb.co/wypSqZv/Heart-3-4.png");
+	else if(imageNumber == 26)
+	    return new WebImage("https://i.ibb.co/bRTkZP8/Heart-1-2.png");
+	else if(imageNumber == 27)
+	    return new WebImage("https://i.ibb.co/G9RYLpS/Heart-1-4.png");
+	else if(imageNumber == 28)
+	    return new WebImage("https://i.ibb.co/YckJFP9/Broken-Heart-Empty.png");
+	else if(imageNumber == 29)
+	    return new WebImage("https://i.ibb.co/bPX03hJ/youdied.png");
+	else if(imageNumber == 30)
+	    return new WebImage("https://i.ibb.co/tBd8Nrf/Platform-Brown.png");
+	else if(imageNumber == 31)
+	    return new WebImage("https://i.ibb.co/YN0r3nB/Platform-Ground.png");
+	else if(imageNumber == 32)
+	    return new WebImage("https://i.ibb.co/ZTJbTLS/Platform-Metal.png");
+	//TCRF DLC
+	else if(imageNumber == 33)
+	    return new WebImage("https://i.ibb.co/CHxTLT1/New-Piskel-1.png");
+}
+
+function playAudio(audioNumber) //Audio NOT playing - HALP
+{
+    print(audioNumber);
+	var music;
+	if(audioNumber == 0)
+		music = new Audio("https://s1.vocaroo.com/media/download_temp/Vocaroo_s1G6TxaEaqXZ.wav"); //Office Theme
+	else if(audioNumber == 1)
+		music = new Audio("https://s1.vocaroo.com/media/download_temp/Vocaroo_s1yYwQZB0DeN.wav"); //Programming Room Theme
+	else if(audioNumber == 2)
+		music = new Audio(""); //Gym Theme
+	music.play();
+}
+
+function onMouseMove(e)
+{
+    mouseX = e.getX();
+    mouseY = e.getY();
+}
+
+//Checks for all key presses
+function keyDown(e)
+{
+	if(e.keyCode == Keyboard.letter('C'))
+		shopButtonPressed = true;
+	if(e.keyCode == Keyboard.letter('M'))
+		println("You have $" + money + ".");
+	if(e.KeyCode == Keyboard.Escape) //Find out how to have escape key *trigger*
+		//shopButtonPressed = false;
+	if(e.keyCode == Keyboard.letter('F'))
+	{
+	    if(money > 0)
+		{
+		    money--;
+		    println("You have paid your respects.");
+		}
+		else
+		    println("You need to have money to pay your respects.");
+	}
+}
