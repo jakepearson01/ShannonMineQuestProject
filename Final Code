@@ -1,0 +1,690 @@
+//This is a remenamt of a shop we were going to implement; if c was pressed, this would be true, the if esc was pressed, it would be false
+var shopButtonPressed = false;
+//Money. You could buy items and pay respects with it.
+var money = 100; //Most basic item 200 money
+//The level counter, had different stages (little areas) within the game, but we decided to have one of those per level, and just call them levels
+var level = 0;
+var previousLevel = -1;
+//The Mouse X position
+var mouseX = 0;
+var mouseY = 0;
+setSize(1280,720);
+
+// Global vars
+var character;
+//'Heath' of the character
+var characterhp = 100;
+var CollisionObjects = []; // Array that contains all objects you can collide with.
+var GravityEffectors = []; // Put things in here that you want to apply gravity to.
+var CreatureHolder = []; // hold creature data
+var CreatureHitbox = []; // hold creature hitboxes
+
+function LoadCharacter(x, y, image){ // Loads the character at the X and Y pos
+    character = new WebImage(image);
+    character.setSize(50, 50);
+    character.setPosition(x, y);
+    character.setColor(Color.blue);
+    add(character);
+}
+//Loads Ms. Shannon into the game
+LoadCharacter(10, 10, "https://i.ibb.co/WB65fLr/MainChar.png");
+
+    function ForceDie(){
+    print("die");
+    for(var i = 0; i < CreatureHolder.length; i++){
+       // if(CreatureHolder[i].CreatureData["Health"] <= 0){
+            //print("equals i");
+            //if(CreatureHolder[i] == creature2){
+                remove(CreatureHolder[i].CreatureData["Hitbox"]);
+                CreatureHolder.remove(i);
+                CreatureHitbox.remove(i);
+          //  }
+        //}
+    }    
+}
+//A function that would have been called every time a level changes, 'kills' (deloads) all characters on screen
+   function ForceDie(){
+    //Goes through every character
+    for(var i = 0; i < CreatureHolder.length; i++){
+       // if(CreatureHolder[i].CreatureData["Health"] <= 0){
+            //print("equals i");
+            //if(CreatureHolder[i] == creature2){
+                //Removes the hitbox of an enemy
+                remove(CreatureHolder[i].CreatureData["Hitbox"]);
+                //Removes a creature
+                CreatureHolder.remove(i);
+                //Removes a hitbox from an arrray holding another creature hitbox
+                CreatureHitbox.remove(i);
+          //  }
+        //}
+    }    
+}
+
+//Creates a creature
+function Creature(positionX, positionY, sizeX, sizeY, attackspeed, attackrange, damage, movestep, health, detectrange, image){ // this function works basically like a class
+    //Creates a new instance of 'CreatureData'
+    this.CreatureData = new Object();
+    
+    
+    this.CreatureData["AttackSpeed"] = attackspeed; // how many mil seconds it takes to do damage again
+    this.CreatureData["AttackRange"] = attackrange;//The Range of the attacking
+    this.CreatureData["Damage"] = damage;//The danage the enemy will incur on you
+    this.CreatureData["MoveStep"] = movestep;
+    this.CreatureData["Health"] = health;
+    this.CreatureData["DetectRange"] = detectrange;
+    this.CreatureData["Hitbox"] = new WebImage(image);
+    this.CreatureData["Hitbox"].setSize(sizeX, sizeY);
+    this.CreatureData["Hitbox"].setPosition(positionX, positionY);
+    add(this.CreatureData["Hitbox"]);//Adds to the array
+    
+    this.CreatureData["Hitbox"].setColor(Color.red);//Sets the color of the creature to red
+    giveGravity(this.CreatureData["Hitbox"]);
+    
+    this.PrintCreature = function(type){
+        println("Creature");
+        // spawn creature of type
+    }  
+    println(this.CreatureData["Hitbox"].getX());
+
+    this.Spawn = function(x, y){
+        //Unimplemented Spawn Function
+    }
+    
+    this.Die = function(creature2){
+        for(var i = 0; i < CreatureHolder.length; i++){//Goes Through Every Creature
+            if(CreatureHolder[i].CreatureData["Health"] <= 0){//Kills creature if 'health' < 0
+                remove(CreatureHolder[i].CreatureData["Hitbox"]);//Removes hitbox
+                CreatureHolder.remove(i);//Removes cretures
+                CreatureHitbox.remove(i);//Removes Hitbox out of array
+            }
+        }    
+    }
+    chasey(this.CreatureData["Hitbox"], this.CreatureData["DetectRange"], this.CreatureData["MoveStep"], this.CreatureData["AttackSpeed"]);
+    
+    function chasey(a,b,c, attackspeed){//Calls AI movement programming
+        
+        function callChase(){
+            aiChase(a,b,c);
+        }
+        setTimer(callChase, 1); //Calls every one millisecond
+    }
+
+    
+}
+
+var attackcounter = 0;
+function Attack(){ // creatures attack
+    for(var i = 0; i < CreatureHolder.length; i++){
+        if(Math.abs(character.getX() - CreatureHolder[i].CreatureData["Hitbox"].geXt()) < CreatureHolder[i].CreatureData["AttackRange"]){
+            if(Math.abs(character.getY() - CreatureHolder[i].CreatureData["Hitbox"].getY()) < CreatureHolder[i].CreatureData["AttackRange"]){
+                attackcounter = attackcounter + 1;
+                if(attackcounter == CreatureHolder[i].CreatureData["AttackSpeed"]){
+                    
+                    attackcounter = 0;
+                    characterhp = characterhp - CreatureHolder[i].CreatureData["Damage"] //Updates the 'characterhp' variable
+                    if(characterhp <= 0){ 
+                        var endgame = getGraphics(29); // death screen
+                        add(endgame);// Shows the death screen
+                        remove(character);//Removes the character on screen
+                    }
+                    println("CHAR DAMAGE TAKEN: (HP) = " + characterhp); //Shows how much damage you have takne
+                }
+             
+            }
+        }
+    }
+}
+
+
+
+
+
+// Character vars:
+var movingRight = false; //If moving right, varible set to true
+var movingLeft = false; //If moving left, varible set to true
+var jumping = false;
+
+function giveGravity(object){ // check if colliding with character so it doesnt change pos
+    var increment = 0;
+    //Gives Gravity to Jumps!
+    function Gravity(){
+        if(!getCollider(object)){
+            if(object == character){
+                if(!jumping){ //If the player is not jumping
+                    increment = increment + 1; // constantly add to the increment to simulate weight - falling faster and faster as time falling increases
+                    object.setPosition(object.getX(), object.getY() + increment);
+                }
+            }else{
+                
+                increment = increment + 1; // constantly add to the increment to simulate weight - falling faster and faster as time falling increases
+                object.setPosition(object.getX(), object.getY() + increment); //Simulates gravity
+            }
+        }else{
+            var passthrough = true;
+            for(var i = 0; i < CreatureHolder.length; i++){
+                if(CreatureHolder[i].CreatureData["Hitbox"] == object && getCollider(object) == character){
+                    passthrough = false //
+                }
+            }
+            if(passthrough){
+                increment = 0;
+                object.setPosition(object.getX(), getCollider(object).getY() - object.getHeight());
+            }
+        }
+    }
+
+    setTimer(Gravity, 1); //Runs this function every millisecond
+
+}
+
+
+
+
+
+
+//Sees if the character is touching the ground; but in mid-air right now
+var touchingGround = false;
+//How much Ms. Shannon Jumps!
+var jumpIncrement = 20;
+
+//Sets the position when the character is moving Right
+    function MoveRight(){
+        character.setPosition(character.getX() + 4, character.getY());
+    }
+//Sets the position when the character is moving Left
+        function MoveLeft(){
+        character.setPosition(character.getX() - 4, character.getY());
+    }
+    
+    
+function CharacterHandler(){ // classy thing kind of pointless - may be useful later so i made it
+    
+    //The swinging of the sword
+    this.Swing = function(){
+        println("swing");
+        for(var i = 0; i < CreatureHolder.length; i++){
+            if(Math.abs(character.getX() - CreatureHolder[i].CreatureData["Hitbox"].getX()) < 500){
+                CreatureHolder[i].CreatureData["Health"] = CreatureHolder[i].CreatureData["Health"] - characterDamage
+                if(CreatureHolder[i].CreatureData["Health"] <= 0){
+                    CreatureHolder[i].Die();
+                }
+            }
+        }
+    }
+    
+    //Jumping actions
+    this.Jump = function(){
+        
+        jumping = true;
+        if(jumpIncrement > 0){
+            jumpIncrement = jumpIncrement - 1;
+            character.setPosition(character.getX(), character.getY() - jumpIncrement);
+        }else{
+            stopTimer(charHandler.Jump);
+            jumping = false;
+            jumpIncrement = 20;
+        }
+        
+    }
+    
+
+    //Sees if you are touching ground
+    function checkGround(){
+        if(getCollider(character)){
+            touchingGround = true;
+        }else{
+            touchingGround = false;
+        }
+    }
+    setTimer(checkGround, 1);
+    
+}
+
+//The amount of HP Ms. Shannon has
+var characterDamage = 10;
+
+//Makes a new instance of charHandler
+var charHandler = new CharacterHandler();
+
+function getCollider(something){ // If something collides with something, return which corner collided
+    var topLeft = getElementAt(something.getX() - 1, something.getY() - 1)
+    if(topLeft != null){
+        return topLeft;
+    }
+    
+    var topRight = getElementAt(something.getX() + something.getWidth() + 1, something.getY() - 1)
+    if(topRight != null){
+        return topRight;
+    }
+    
+    var bottomLeft = getElementAt(something.getX() - 1, something.getY() + something.getHeight() - 1)
+    if(bottomLeft != null){
+        return bottomLeft;
+    }
+    
+    var bottomRight = getElementAt(something.getX() + something.getWidth() + 1, something.getY() + something.getHeight() + 1)
+    if(bottomRight != null)
+        return bottomRight;
+
+    return null;
+}
+
+giveGravity(character);
+
+//Gives objects images (standard rectangles) and collision
+function LoadMap(maptype){
+    if(maptype == 0){
+        var background = new WebImage("https://i.ibb.co/JQJhy1j/Court.png");
+        
+        var ground = new WebImage("https://i.ibb.co/ZTJbTLS/Platform-Metal.png");
+        ground.setPosition(110, 500);
+        add(ground);
+        
+        var ground = new Rectangle(200, 50);
+        ground.setPosition(110, 500);
+        ground.setColor(Color.black);
+        add(ground);
+        
+        CollisionObjects.push(ground);
+        
+        var ground2 = new Rectangle(200, 50);
+        ground2.setPosition(320, 500);
+        ground2.setColor(Color.black);
+        add(ground2);
+        
+        CollisionObjects.push(ground2);
+        
+        var ground3= new Rectangle(200, 50);
+        ground3.setPosition(530, 500);
+        ground3.setColor(Color.black);
+        add(ground3);
+        
+        CollisionObjects.push(ground3);
+        
+        var ground4 = new Rectangle(200, 50);
+        ground4.setPosition(740, 500);
+        ground4.setColor(Color.black);
+        add(ground4);
+        
+        CollisionObjects.push(ground4);
+        
+        
+        var ground5 = new Rectangle(200, 50);
+        ground5.setPosition(1000, 600);
+        ground5.setColor(Color.black);
+        add(ground5);
+        
+        CollisionObjects.push(ground5);
+        
+
+        
+               var ground6 = new Rectangle(200, 50);
+        ground6.setPosition(110, 225);
+        ground6.setColor(Color.black);
+        add(ground6);
+        
+        CollisionObjects.push(ground6);
+        
+        var ground7 = new Rectangle(200, 50);
+        ground7.setPosition(320, 225);
+        ground7.setColor(Color.black);
+        add(ground7);
+        
+        CollisionObjects.push(ground7);
+        
+        var ground8 = new Rectangle(200, 50);
+        ground8.setPosition(530, 225);
+        ground8.setColor(Color.black);
+        add(ground8);
+        
+        CollisionObjects.push(ground8);
+        
+        var ground9 = new Rectangle(200, 50);
+        ground9.setPosition(740, 225);
+        ground9.setColor(Color.black);
+        add(ground9);
+        
+        CollisionObjects.push(ground9);
+        
+        var ground10 = new Rectangle(200, 50);
+        ground10.setPosition(1000, 375);
+        ground10.setColor(Color.black);
+        add(ground10);
+        
+        CollisionObjects.push(ground10);
+        
+        
+    }else if(maptype==1){
+       var background = new Rectangle(getWidth(), getHeight());
+        
+        var ground = new Rectangle(200, 50);
+        ground.setPosition(110, 500);
+        ground.setColor(Color.black);
+        add(ground);
+        
+        CollisionObjects.push(ground);
+        
+        var ground2 = new Rectangle(200, 50);
+        ground2.setPosition(320, 500);
+        ground2.setColor(Color.black);
+        add(ground2);
+        
+        CollisionObjects.push(ground2);
+        
+        var ground3= new Rectangle(200, 50);
+        ground3.setPosition(530, 500);
+        ground3.setColor(Color.black);
+        add(ground3);
+        
+        CollisionObjects.push(ground3);
+        
+        var ground4 = new Rectangle(200, 50);
+        ground4.setPosition(740, 500);
+        ground4.setColor(Color.black);
+        add(ground4);
+        
+        CollisionObjects.push(ground4);
+        
+        
+        var ground5 = new Rectangle(200, 50);
+        ground5.setPosition(1000, 600);
+        ground5.setColor(Color.black);
+        add(ground5);
+        
+        CollisionObjects.push(ground5);
+        
+
+        
+               var ground6 = new Rectangle(200, 50);
+        ground6.setPosition(110, 225);
+        ground6.setColor(Color.black);
+        add(ground6);
+        
+        CollisionObjects.push(ground6);
+        
+        var ground7 = new Rectangle(200, 50);
+        ground7.setPosition(320, 225);
+        ground7.setColor(Color.black);
+        add(ground7);
+        
+        CollisionObjects.push(ground7);
+        
+        var ground8 = new Rectangle(200, 50);
+        ground8.setPosition(530, 225);
+        ground8.setColor(Color.black);
+        add(ground8);
+        
+        CollisionObjects.push(ground8);
+        
+        var ground9 = new Rectangle(200, 50);
+        ground9.setPosition(740, 225);
+        ground9.setColor(Color.black);
+        add(ground9);
+        
+        CollisionObjects.push(ground9);
+        
+        var ground10 = new Rectangle(200, 50);
+        ground10.setPosition(1000, 375);
+        ground10.setColor(Color.black);
+        add(ground10);
+        
+        CollisionObjects.push(ground10);
+        
+    }
+    if(maptype == 2){
+        var background = new Rectangle(getWidth(), getHeight());
+        
+        var ground = new Rectangle(getWidth(), 50);
+        ground.setPosition(0, getHeight() - ground.getHeight());
+        ground.setColor(Color.black);
+        add(ground);
+        
+        CollisionObjects.push(ground);
+        
+        var ground2 = new Rectangle(200, 50);
+        ground2.setPosition(1100, 500);
+        ground2.setColor(Color.black);
+        add(ground2);
+        
+        CollisionObjects.push(ground2);
+        
+        var ground3 = new Rectangle(200, 50);
+        ground3.setPosition(850, 300);
+        ground3.setColor(Color.black);
+        add(ground3);
+        
+        CollisionObjects.push(ground3);
+    }
+}
+
+
+var a = false;
+function keyDown(e){
+    if(e.keyCode == Keyboard.letter('D') && !movingRight){
+        movingRight = true;
+        stopTimer(MoveLeft);
+        setTimer(MoveRight, 1);
+       
+    
+    }
+    
+    if(e.keyCode == Keyboard.letter('A') && !movingLeft){
+        movingLeft = true;
+        
+        stopTimer(MoveRight);
+        setTimer(MoveLeft, 1);
+
+        }
+        
+    if(e.keyCode == Keyboard.SPACE && !jumping){
+        print(charHandler.touchingGround);
+        if(touchingGround){
+            setTimer(charHandler.Jump, 1);
+        }
+    }
+    //Opens shop if shopButtonPressed is true, closes if false
+    if(e.keyCode == Keyboard.letter('C'))
+		shopButtonPressed = true;
+	//Displays your money, but we all know that Ms. Shannon is really worth ALL THE MONEY
+	if(e.keyCode == Keyboard.letter('M'))
+		println("You have $" + money + ".");
+	if(e.KeyCode == Keyboard.Escape) //Find out how to have escape key *trigger*, closes shop if actually working
+		//shopButtonPressed = false;
+	//Press F to pay respects, literally
+	if(e.keyCode == Keyboard.letter('F'))
+	{
+	    if(money > 0)
+		{
+		    //Take away a dollar
+		    money--;
+		    //You've done a good deed
+		    println("You have paid your respects.");
+		}
+		else
+		    //Why try?
+		    println("You need to have money to pay your respects.");
+}
+}
+keyDownMethod(keyDown);
+
+
+function keyUp(e){
+    //stops moving right to allow for moving left
+    println("keyup");
+    if(e.keyCode == Keyboard.letter('D')){
+        movingRight = false;
+        a = true;
+        stopTimer(MoveRight); 
+       
+    }
+    //stops moving left to allow for moving right
+    if(e.keyCode == Keyboard.letter('A')){
+        movingLeft = false;
+        a = true;
+        stopTimer(MoveLeft); 
+    }
+    
+}
+keyUpMethod(keyUp);
+
+function mouseClick(e){
+    print("click");
+    charHandler.Swing();
+}
+mouseClickMethod(mouseClick);
+
+function mouseMove(e){
+    
+}
+mouseMoveMethod(mouseMove);
+
+//AI chase player when certain distance away
+function aiChase(enemy, distance, speed){
+    var playerToAI = enemy.getX() - character.getX();
+    if(playerToAI < 0){
+        playerToAI *= -1;
+    }
+    if(playerToAI < distance){
+        if(enemy.getX() < character.getX()){
+            enemy.setPosition(enemy.getX() + speed, enemy.getY());
+        }else{
+            enemy.setPosition(enemy.getX() - speed, enemy.getY());
+        }
+    }
+}
+
+var scene = 0;
+
+var endpartthing;
+
+function CheckScene(){
+    if(getCollider(character) == endpartthing){
+        changeScene(50, 50);
+    }
+}
+
+function changeScene(x, y){
+
+    scene++;
+    
+    endpartthing = new WebImage("https://i.ibb.co/njhXRrR/Shannon-Check.png");
+    endpartthing.setPosition(x, y - 30);
+    
+    add(endpartthing)
+    CollisionObjects.push[endpartthing];
+    
+    println(scene);
+    //return getCollider(endpartthing);
+}
+LoadMap(scene);
+
+setTimer(CheckScene, 1);
+setTimer(Attack, 1); // calls the attack timer so it constantly checks to see if player is near enemy, if so do damage
+
+//____________________________________________________
+
+var newcreature = new Creature(0, 0, 100, 100, 80, 200, 70, 2, 100, 400, "https://www.petmd.com/sites/default/files/Acute-Dog-Diarrhea-47066074.jpg"); //make a new creature (standard creature stats, useful if confused and don't want to spend time configuring)
+CreatureHolder.push(newcreature); //Puts creature into array
+changeScene(850, 275); //Changes scene, see function comment
+
+//Displays Graphics? Apparently, this has been done already...
+function display()
+{
+    if(stage != previousLevel)
+    {
+        playAudio(level); //Plays audio based on level
+        ForceDie(); //Calls ForceDie, see function comment for how it works
+    }
+        
+    previousLevel = stage;
+
+    function displayGraphics(xCoordinate, yCoordinate) 
+	{
+		drawImage(getGraphics(14 + level), 0, getHeight() - 50, getWidth(), 50);
+		drawImage(drawImage(20 + level), xCoordinate, yCoordinate, 64, 64); //Starts index at 20 and bases image selection off of level selected
+	}
+
+	function drawImage(image, x, y, width, height)
+	{
+		image.setPosition(x, y); //Sets position of image...
+		image.setSize(width, height); //Sets size...
+		add(image); //Adds it to the screen
+	}
+}
+//Gets graphics from imageNumber
+function getGraphics(imageNumber) 
+{ 
+	if(imageNumber == 0)
+		return new WebImage("https://i.ibb.co/ygcWrgK/Welcome-to-Mine-Quest.png"); //Welcome logo
+	else if(imageNumber == 1)
+		return new WebImage("https://www.drodd.com/images14/white13.png");//Just White - Used for refreshing, but is done automatically now, so not needed
+	else if(imageNumber == 2)
+		return new WebImage("https://i.ibb.co/W29x6gy/Logo.png"); //Logo
+	else if(imageNumber == 3)
+		return new WebImage("https://i.ibb.co/WB65fLr/MainChar.png"); //Ms. Shannon!!!
+	else if(imageNumber == 4)
+	    return new WebImage("https://i.ibb.co/njhXRrR/Shannon-Check.png"); //Ms. Shannon's Miniscule Paycheck
+	else if(imageNumber == 5)
+	    return new WebImage("https://i.ibb.co/wK84064/New-Piskel.png"); //Potion Item
+	else if(imageNumber == 6)
+	    return new WebImage("https://i.ibb.co/jhw98mv/Knight-Sword-1.png"); //Sword1
+	else if(imageNumber == 7)
+	    return new WebImage("https://i.ibb.co/tsTtGVK/Samurai-Sword-2.png"); //Sword2
+	else if(imageNumber > 7 && imageNumber < 14)
+	    return new WebImage("https://i.ibb.co/GFZszNL/Sold-Out.png"); //Items sold out
+	else if(imageNumber == 14)
+		return new WebImage("OFF"); //Office background; done but never implemented, Matthew has it...
+	else if(imageNumber == 15)
+		return new WebImage("https://i.ibb.co/vQrXjMP/Office-Carpet.png"); //Office carpet; carpet is the foreground
+	else if(imageNumber == 16)
+		return new WebImage("PR"); //Programming room background; done but never implemented, Matthew has it...
+	else if(imageNumber == 17)
+		return new WebImage("PRC"); //Programming room carpet; carpet is the foreground; done but never implemented, Matthew has it...
+	else if(imageNumber == 18)
+		return new WebImage("https://i.ibb.co/JQJhy1j/Court.png"); //Basketball Court backround
+	else if(imageNumber == 19)
+		return new WebImage("https://i.ibb.co/xmjJmyb/Court-Carpet.png"); //Basketball court carpet; carpet is the foreground
+	else if(imageNumber == 20)
+	    return new WebImage("https://i.ibb.co/9ps04g4/pixil-frame-0.png"); //Cute green slime
+	else if(imageNumber == 21)
+		return new WebImage("https://i.ibb.co/VwSgkMr/Anger-Slime.png"); //Dwevilish angry slime
+	else if(imageNumber == 22)
+	    return new WebImage("https://i.ibb.co/vJYdrfC/New-Piskel-1-1.png"); // A knight
+	else if(imageNumber == 23)
+	    return new WebImage("https://www.wcpss.net/cms/lib/NC01911451/Centricity/Domain/2310/M2.jpg"); //BAZZELL!!!!!!!!!!!!!!!!
+	else if(imageNumber == 24)
+	    return new WebImage("https://i.ibb.co/drN23tn/Heart.png"); //A full heart of health
+	else if(imageNumber == 25)
+	    return new WebImage("https://i.ibb.co/wypSqZv/Heart-3-4.png"); //3/4 of a full heart of health
+	else if(imageNumber == 26)
+	    return new WebImage("https://i.ibb.co/bRTkZP8/Heart-1-2.png"); //1/2 of a full heart of health
+	else if(imageNumber == 27)
+	    return new WebImage("https://i.ibb.co/G9RYLpS/Heart-1-4.png"); //1/4 of a full heart of health
+	else if(imageNumber == 28)
+	    return new WebImage("https://i.ibb.co/YckJFP9/Broken-Heart-Empty.png"); //An empty heart of health
+	else if(imageNumber == 29)
+	    return new WebImage("https://i.ibb.co/bPX03hJ/youdied.png"); //A graphic showing that you died... SAD.
+	else if(imageNumber == 30)
+	    return new WebImage("https://i.ibb.co/tBd8Nrf/Platform-Brown.png"); //A brown platform
+	else if(imageNumber == 31)
+	    return new WebImage("https://i.ibb.co/YN0r3nB/Platform-Ground.png"); //A platform that looks like the earth
+	else if(imageNumber == 32)
+	    return new WebImage("https://i.ibb.co/ZTJbTLS/Platform-Metal.png"); //A platform that looks like metal
+	//TCRF DLC
+	else if(imageNumber == 33)
+	    return new WebImage("https://i.ibb.co/CHxTLT1/New-Piskel-1.png"); //Grass, created never to get used...
+}
+//Plays audio based on specified 'audioNumber'.
+function playAudio(audioNumber) //Audio NOT playing - HALP - FIX - need to link to link to Blake's kicking SoundClout and get dat MP3 File
+{
+    print(audioNumber);
+	var music;
+	if(audioNumber == 0)
+		music = new Audio("https://s1.vocaroo.com/media/download_temp/Vocaroo_s1G6TxaEaqXZ.wav"); //Office Theme
+	else if(audioNumber == 1)
+		music = new Audio("https://s1.vocaroo.com/media/download_temp/Vocaroo_s1yYwQZB0DeN.wav"); //Programming Room Theme
+	else if(audioNumber == 2)
+		music = new Audio(""); //Gym Theme
+	music.play();
+	
+}
